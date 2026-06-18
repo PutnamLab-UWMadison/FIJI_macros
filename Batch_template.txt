@@ -52,6 +52,7 @@ for (i = 0; i < fileList.length; i++) {
 	originalTitle = getTitle();
 
         // ENTER YOUR PROCESS HERE
+	// Can copy-paste from FIJI's macro-recorder
         
 
 	// Save results, EDIT "_saveSuffix" to adjust your saved file name
