@@ -1,0 +1,69 @@
+// Template for FIJI batch processing macros
+// Goes into directory and pulls any files with the corresponding
+// suffix and runs the process
+
+
+
+// Build the input dialog, EDIT the "Description"
+Dialog.create("Description");
+Dialog.addDirectory("Image folder", "");
+Dialog.addString("File suffix to segment:", "");
+
+// Add any other aspects to dialog box if needed
+
+
+Dialog.show();
+
+// Retrieve values
+imageFolder = Dialog.getString();
+pullSuffix = Dialog.getString();
+
+// Add any other dialog aspects you added below this, in the
+// same order that they were added above
+
+
+// Ensure trailing separator (DO NOT DELETE)
+if (!endsWith(imageFolder, "/") && !endsWith(imageFolder, "\\"))
+    imageFolder = imageFolder + "/";
+
+// Debug: confirm what we got (delete when your code is working, if u want)
+print("Image folder: [" + imageFolder + "]");
+print("Suffix: [" + pullSuffix + "]");
+
+
+
+// Get list of files (DO NOT EDIT)
+fileList = getFileList(imageFolder);
+print("Files found: " + fileList.length);
+
+for (i = 0; i < fileList.length; i++) {
+    filename = fileList[i];
+	// Debug: delete print statement if you want
+    print("Working on " + filename);
+
+    if (endsWith(filename, pullSuffix + ".tif") || endsWith(filename, pullSuffix + ".tiff")) {
+        print("Processing: " + filename);
+
+	open(imageFolder + filename);
+	print("opening " + imageFolder + filename);
+        // run("Bio-Formats Importer", "open=[" + imageFolder + filename + "] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
+        getDimensions(width, height, channels, slices, frames);
+	print(filename + " -> W:" + width + " H:" + height + " C:" + channels + " Z:" + slices + " T:" + frames);
+	originalTitle = getTitle();
+
+        // ENTER YOUR PROCESS HERE
+        
+
+	// Save results, EDIT "_saveSuffix" to adjust your saved file name
+	if (endsWith(filename, ".tiff"))
+            outputName = replace(filename, ".tiff", "_saveSuffix.tiff");
+        else
+            outputName = replace(filename, ".tif", "_saveSuffix.tif");
+    
+    saveAs("Tiff", imageFolder + outputName);
+	// Debug: show where your file went, delete if u want
+    print("Saved to: " + outputName);
+    close();
+    }
+}
+print("Batch complete!");
