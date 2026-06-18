@@ -1,0 +1,69 @@
+// ImageJ macro for batch segmentation with LabKit
+// Written March/April 2026 by Cassie Morris w/assistance from Claude.ai
+
+// Build the input dialog
+Dialog.create("LabKit Batch Segmentation");
+Dialog.addDirectory("Image folder", "");
+Dialog.addFile("Classifier file (.classifier)", "");
+Dialog.addNumber("Channel to segment (1-based)", 1);
+Dialog.addString("File suffix to segment:", "");
+Dialog.addString("Naming suffix:", "");
+Dialog.show();
+
+// Retrieve values
+imageFolder = Dialog.getString();
+classifierFile = Dialog.getString();
+channel = Dialog.getNumber();
+pullSuffix = Dialog.getString();
+segSuffix = Dialog.getString();
+
+// Build the segmentation label
+if (segSuffix != "") {
+	segLabel = "_" + segSuffix + "_segmentation";
+} else {
+	segLabel = "_segmentation";
+}
+
+// Get list of files
+fileList = getFileList(imageFolder);
+
+for (i = 0; i < fileList.length; i++) {
+    filename = fileList[i];
+
+    if (endsWith(filename, pullSuffix + ".tif") || endsWith(filename, pullSuffix + ".tiff")) {
+        print("Processing: " + filename);
+
+	open(imageFolder + filename);
+        // run("Bio-Formats Importer", "open=[" + imageFolder + filename + "] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
+        getDimensions(width, height, channels, slices, frames);
+	print(filename + " -> W:" + width + " H:" + height + " C:" + channels + " Z:" + slices + " T:" + frames);
+	originalTitle = getTitle();
+
+        // Record the title of the image being segmented
+        imageToSegment = getTitle();
+
+        run("Segment Image With Labkit",
+            "segmenter_file=[" + classifierFile + "] use_gpu=false");
+	// Debug: print active window and all open windows
+	print("Active window after LabKit: " + getTitle());
+	for (w = 1; w <= nImages; w++) {
+    		selectImage(w);
+    		print("  Open window " + w + ": " + getTitle());
+	}
+
+        outputName = replace(filename, ".tif", segLabel +".tif");
+        outputName = replace(outputName, ".tiff", "_segmentation.tiff");
+        saveAs("Tiff", imageFolder + outputName);
+        close(); // close saved segmentation
+
+        // Close the channel/original image
+        if (isOpen(imageToSegment)) {
+            selectWindow(imageToSegment);
+            close();
+        }
+
+        print("Saved: " + outputName);
+    }
+}
+
+print("Batch segmentation complete!");
